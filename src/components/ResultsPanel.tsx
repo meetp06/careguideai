@@ -18,7 +18,7 @@ export function ResultsPanel({ result }: ResultsPanelProps) {
   return (
     <div className="flex flex-col h-full px-4 py-6 overflow-y-auto">
       <Tabs defaultValue="summary" className="flex flex-col flex-1">
-        <TabsList className="w-full grid grid-cols-3 mb-4 bg-secondary/50">
+        <TabsList className="w-full grid grid-cols-3 mb-4 glass border-white/20">
           <TabsTrigger value="summary" className="gap-1.5 text-xs">
             <FileText className="w-3.5 h-3.5" />
             Summary

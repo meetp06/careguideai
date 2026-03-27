@@ -138,6 +138,10 @@
   .agent-dot {
     animation: agentProgress 2s ease-in-out forwards;
   }
+
+  .glass {
+    @apply bg-white/60 dark:bg-black/40 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-[0_8px_32px_0_rgba(100,100,100,0.1)];
+  }
 }
 
 @keyframes orbPulse {

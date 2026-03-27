@@ -63,9 +63,9 @@ const Index = () => {
   }, [runPipeline]);
 
   return (
-    <div className="flex flex-col h-screen bg-background overflow-hidden">
+    <div className="flex flex-col h-screen bg-transparent overflow-hidden text-foreground">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-border/50 flex-shrink-0">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-white/20 dark:border-white/10 glass flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
             <Heart className="w-4 h-4 text-primary" />
@@ -124,7 +124,7 @@ const Index = () => {
         </motion.section>
 
         <motion.section
-          className="w-[200px] flex-shrink-0 border-r border-border/50 relative z-10"
+          className="w-[200px] flex-shrink-0 relative z-10"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
@@ -137,7 +137,7 @@ const Index = () => {
         </motion.section>
 
         <motion.section
-          className="flex-1 min-w-0"
+          className="flex-1 min-w-0 relative"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}

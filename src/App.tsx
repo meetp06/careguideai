@@ -6,12 +6,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import SketchLeafBackground from "./components/SketchLeafBackground";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <SketchLeafBackground />
       <Toaster />
       <Sonner />
       <BrowserRouter>

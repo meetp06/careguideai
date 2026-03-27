@@ -136,7 +136,7 @@ export function VoiceInputPanel({
                   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTextSubmit(); }
                 }}
                 placeholder="Describe your concern..."
-                className="flex-1 text-xs rounded-lg border border-border bg-background px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-primary/50 min-h-[60px]"
+                className="flex-1 text-xs rounded-lg border border-border bg-white/40 dark:bg-black/40 backdrop-blur-sm px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-primary/50 min-h-[60px]"
               />
               <button
                 onClick={handleTextSubmit}

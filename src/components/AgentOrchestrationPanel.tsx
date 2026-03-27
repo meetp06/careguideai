@@ -39,7 +39,7 @@ function AgentNode({ agent, index }: { agent: AgentInfo; index: number }) {
       transition={{ delay: index * 0.1 }}
     >
       <div
-        className={`relative flex items-center justify-center w-10 h-10 rounded-full bg-background border-2 ${
+        className={`relative flex items-center justify-center w-10 h-10 rounded-full bg-white/60 dark:bg-black/40 backdrop-blur-sm border-2 ${
           isDone ? 'border-accent' : isActive ? 'border-primary' : 'border-border'
         } transition-colors duration-500 shadow-sm`}
       >
@@ -53,12 +53,12 @@ function AgentNode({ agent, index }: { agent: AgentInfo; index: number }) {
         <Icon className={`w-4 h-4 ${config.textColor}`} />
 
         {isDone && (
-          <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-[1px]">
+          <div className="absolute -bottom-1 -right-1 bg-white dark:bg-black rounded-full p-[1px]">
             <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
           </div>
         )}
         {agent.status === 'warning' && (
-          <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-[1px]">
+          <div className="absolute -bottom-1 -right-1 bg-white dark:bg-black rounded-full p-[1px]">
             <AlertTriangle className="w-3.5 h-3.5 text-warning" />
           </div>
         )}

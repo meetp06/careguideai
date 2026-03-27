@@ -66,7 +66,7 @@ export function SummaryView({ data, isEmergency }: SummaryViewProps) {
       {sections.map((section, i) => (
         <motion.div
           key={section.title}
-          className="rounded-xl bg-card border border-border p-4"
+          className="rounded-xl glass border-border/50 p-4"
           variants={sectionVariant}
           initial="hidden"
           animate="show"
@@ -84,7 +84,7 @@ export function SummaryView({ data, isEmergency }: SummaryViewProps) {
 
       {data.verificationNotes.length > 0 && (
         <motion.div
-          className="rounded-xl bg-accent/5 border border-accent/20 p-4"
+          className="rounded-xl glass bg-accent/5 border border-accent/20 p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
