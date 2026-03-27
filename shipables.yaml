@@ -1,0 +1,15 @@
+name: careguide-verifier
+description: A medical navigation and verification assistant tool demonstrating the Context Engineering Challenge architecture.
+version: 1.0.0
+author: Jenil Kathrotia & Team
+license: MIT
+repository: https://github.com/jenilkathrotiya/careguide-ai
+tools:
+  - name: verify_symptoms
+    description: Parses patient symptoms and determines medical urgency using verification logic.
+    type: function
+    handler: supabase/functions/care-guide/index.ts
+instructions: |
+  # CareGuide Verifier
+  An AI agent skill that enforces medical safety verification over extracted symptoms and research.
+  Use this skill to safely intercept and rewrite diagnosis-like language from LLM outputs.

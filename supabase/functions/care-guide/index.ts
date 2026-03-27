@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import postgres from "npm:postgres";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -243,6 +244,23 @@ function getDoctorsForSpecialty(specialty: string) {
   return results.slice(0, 4);
 }
 
+// ─── Live Data Fetch (Airbyte Agent Connectors) ───
+async function fetchDoctorsFromAirbyte(specialty: string) {
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/doctors?specialty=${encodeURIComponent(specialty)}`);
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+        return json.data;
+      }
+    }
+  } catch (err) {
+    console.error("Airbyte service fetch failed, falling back to mock:", err);
+  }
+  // Fallback if the python service isn't running
+  return getDoctorsForSpecialty(specialty);
+}
+
 // ─── Main Handler ───
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -325,7 +343,7 @@ serve(async (req) => {
     }
 
     const specialtyType = research.recommendedSpecialtyType || "Family Medicine";
-    const doctors = getDoctorsForSpecialty(finalIsEmergency ? "Urgent Care" : specialtyType);
+    const doctors = await fetchDoctorsFromAirbyte(finalIsEmergency ? "Urgent Care" : specialtyType);
 
     const result = {
       summary: finalSummary,
@@ -339,6 +357,44 @@ serve(async (req) => {
         missedRedFlags: verification.missedRedFlags || [],
       },
     };
+
+    // Save to Ghost DBs for Context Engineering Challenge
+    const GHOST_AGENT_MEMORY_URL = Deno.env.get("GHOST_AGENT_MEMORY_URL");
+    const GHOST_VERIFIED_PATHWAYS_URL = Deno.env.get("GHOST_VERIFIED_PATHWAYS_URL");
+    if (GHOST_AGENT_MEMORY_URL && GHOST_VERIFIED_PATHWAYS_URL) {
+      const sqlMemory = postgres(GHOST_AGENT_MEMORY_URL);
+      const sqlPathways = postgres(GHOST_VERIFIED_PATHWAYS_URL);
+      
+      try {
+        console.log("[Ghost] Saving to agent_memory...");
+        await sqlMemory`
+          INSERT INTO session_logs (transcript, symptoms_extracted, verification_passed)
+          VALUES (${transcript}, ${JSON.stringify(extraction)}, ${verification.passed})
+        `;
+      } catch (e) {
+        console.error("Failed to save memory log:", e);
+      } finally {
+        await sqlMemory.end();
+      }
+
+      if (verification.passed) {
+        try {
+          console.log("[Ghost] Saving new patterns to verified_pathways...");
+          for (const s of finalSymptoms) {
+            await sqlPathways`
+              INSERT INTO pathways (symptom, specialty_recommended, urgency)
+              VALUES (${s.symptom}, ${s.recommendedSpecialist}, ${s.urgency})
+            `;
+          }
+        } catch (e) {
+          console.error("Failed to save pathway:", e);
+        } finally {
+          await sqlPathways.end();
+        }
+      } else {
+         await sqlPathways.end();
+      }
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

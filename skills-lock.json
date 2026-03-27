@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "airbyte-agent-connectors": {
+      "source": "airbytehq/airbyte-agent-connectors",
+      "sourceType": "github",
+      "computedHash": "c4b8816a5580a8c41c0d86271f1c0fe8169f68e14a18e578632456f5297c7c9c"
+    }
+  }
+}
