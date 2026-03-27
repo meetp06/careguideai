@@ -9,7 +9,8 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useAgentOrchestration } from '@/hooks/useAgentOrchestration';
 import { AppState } from '@/types/care-guide';
 import { motion } from 'framer-motion';
-import { Heart, Moon, Sun, ArrowLeft } from 'lucide-react';
+import { Heart, Moon, Sun, ArrowLeft, LogOut } from 'lucide-react';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -20,6 +21,8 @@ const Index = () => {
     setIsDark(next);
     document.documentElement.classList.toggle('dark', next);
   }, [isDark]);
+
+  const { logout } = useAuth0();
 
   const {
     isListening,
@@ -89,6 +92,13 @@ const Index = () => {
           >
             <ArrowLeft className="w-3 h-3" />
             Home
+          </button>
+          <button
+            onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-red-500 transition-colors ml-2"
+          >
+            <LogOut className="w-3 h-3" />
+            Logout
           </button>
         </div>
       </header>

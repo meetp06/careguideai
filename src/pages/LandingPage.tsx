@@ -65,7 +65,7 @@ const agentSteps = [
 ];
 
 const sponsors = [
-  'AWS', 'Auth0', 'Bland AI', 'Aerospike', 'TrueFoundry', 'Airbyte', 'Overmind', 'Kiro',
+  'Ghost', 'Airbyte', 'Bland AI', 'Aerospike', 'Macroscope', 'Shipables', 'Auth0', 'AWS',
 ];
 
 export default function LandingPage() {
