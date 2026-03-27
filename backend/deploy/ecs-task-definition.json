@@ -1,0 +1,72 @@
+{
+  "family": "care-compass-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/care-compass-task-role",
+  "containerDefinitions": [
+    {
+      "name": "care-compass-api",
+      "image": "YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/care-compass-api:latest",
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        { "name": "APP_HOST",            "value": "0.0.0.0" },
+        { "name": "APP_PORT",            "value": "8000" },
+        { "name": "DEBUG",               "value": "false" },
+        { "name": "AWS_REGION",          "value": "us-east-1" },
+        { "name": "AEROSPIKE_PORT",      "value": "3000" },
+        { "name": "AEROSPIKE_NAMESPACE", "value": "care_compass" },
+        { "name": "BEDROCK_MODEL_ID",    "value": "anthropic.claude-3-haiku-20240307-v1:0" }
+      ],
+      "secrets": [
+        {
+          "name": "AWS_ACCESS_KEY_ID",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:care-compass/aws-access-key-id"
+        },
+        {
+          "name": "AWS_SECRET_ACCESS_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:care-compass/aws-secret-access-key"
+        },
+        {
+          "name": "AEROSPIKE_HOST",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:care-compass/aerospike-host"
+        },
+        {
+          "name": "OVERMIND_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:care-compass/overmind-api-key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/care-compass-api",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:8000/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 15
+      }
+    }
+  ],
+  "tags": [
+    { "key": "project",     "value": "care-compass-ai" },
+    { "key": "environment", "value": "production" },
+    { "key": "component",   "value": "backend-api" }
+  ]
+}

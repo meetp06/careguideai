@@ -3,6 +3,54 @@ import { AgentInfo, AgentStatus, CareGuideResult } from '@/types/care-guide';
 import { buildMockSymptoms, matchDoctorsBySpecialty, detectEmergency } from '@/lib/agent-utils';
 import { sanitizeTranscript } from '@/lib/sanitize';
 
+// ── Normalise FastAPI (snake_case) response → frontend (camelCase) types ──────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeApiResponse(raw: any): CareGuideResult {
+  const s = raw.summary ?? {};
+  return {
+    summary: {
+      whatYouSaid: s.what_you_said ?? '',
+      whatThisMayIndicate: s.may_indicate ?? '',
+      recommendedNextStep: `${s.urgency_level ? `[${s.urgency_level}] ` : ''}${s.safety_note ?? ''}`,
+      whenToSeekUrgentCare: (s.next_steps ?? []).join(' • ') || 'Consult a healthcare provider.',
+      verificationNotes: [
+        `Urgency: ${s.urgency_level ?? 'Unknown'}`,
+        raw.verification_passed ? 'Safety check passed' : '⚠ Safety check flagged — review recommended',
+        ...(raw.agent_metrics ?? []).map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (m: any) => `${m.agent_name}: ${Math.round(m.duration_ms ?? 0)}ms`,
+        ),
+      ],
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    symptoms: (raw.symptoms ?? []).map((sym: any) => ({
+      symptom: sym.symptom,
+      duration: sym.duration,
+      severity: sym.severity,
+      urgency: sym.urgency,
+      possibleConcern: sym.possible_concern,
+      recommendedSpecialist: sym.recommended_specialist,
+      nextStep: sym.next_step,
+    })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    doctors: (raw.doctors ?? []).map((doc: any) => ({
+      id: doc.id,
+      name: doc.name,
+      specialty: doc.specialty,
+      location: doc.location ?? doc.hospital ?? '',
+      distance: doc.distance,
+      rating: doc.rating,
+      reviewCount: doc.review_count ?? 0,
+      availability: doc.availability,
+      phone: doc.phone,
+      imageUrl: doc.image_url ?? '',
+      acceptsNewPatients: doc.accepts_new_patients ?? true,
+    })),
+    isEmergency: raw.is_emergency ?? false,
+    verificationPassed: raw.verification_passed ?? true,
+  };
+}
+
 const initialAgents: AgentInfo[] = [
   { id: 'intake', name: 'Voice Intake', icon: 'mic', status: 'idle', description: 'Capturing voice input' },
   { id: 'symptoms', name: 'Symptom Analysis', icon: 'search', status: 'idle', description: 'Extracting symptoms' },
@@ -65,10 +113,55 @@ export function useAgentOrchestration() {
       const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
       try {
+        const apiUrl = import.meta.env.VITE_API_URL;          // FastAPI backend
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-        if (supabaseUrl && supabaseKey) {
+        if (apiUrl) {
+          // ── FastAPI backend path ───────────────────────────────────────────
+          updateAgent('intake', 'running');
+          await delay(400);
+          if (abortRef.current) return;
+          updateAgent('intake', 'completed');
+
+          updateAgent('symptoms', 'running');
+          const response = await fetch(`${apiUrl}/care-guide`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript: cleanTranscript }),
+          });
+          if (!response.ok) throw new Error(`API error ${response.status}`);
+
+          if (abortRef.current) return;
+          updateAgent('symptoms', 'completed');
+          await delay(200);
+
+          updateAgent('research', 'running');
+          const raw = await response.json();
+          await delay(300);
+          if (abortRef.current) return;
+          updateAgent('research', 'completed');
+
+          updateAgent('verification', 'running');
+          await delay(200);
+          if (abortRef.current) return;
+          updateAgent('verification', raw.verification_passed ? 'verified' : 'warning');
+
+          updateAgent('doctor', 'running');
+          await delay(300);
+          if (abortRef.current) return;
+          updateAgent('doctor', 'completed');
+
+          updateAgent('booking', 'running');
+          await delay(200);
+          if (abortRef.current) return;
+          updateAgent('booking', 'completed');
+
+          const finalResult = normalizeApiResponse(raw);
+          setResult(finalResult);
+          curateKnowledge(finalResult);
+        } else if (supabaseUrl && supabaseKey) {
+          // ── Supabase edge-function path ───────────────────────────────────
           // Agent 1: Voice Intake
           updateAgent('intake', 'running');
           await delay(600);

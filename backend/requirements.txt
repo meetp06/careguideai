@@ -1,0 +1,12 @@
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+pydantic==2.6.4
+python-dotenv==1.0.1
+
+# ── AWS Bedrock (LLM) ─────────────────────────────────────────────────────────
+boto3==1.34.69
+botocore==1.34.69
+
+# ── Aerospike real-time database ──────────────────────────────────────────────
+aerospike==11.0.0

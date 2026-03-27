@@ -5,6 +5,7 @@ import { AgentOrchestrationPanel } from '@/components/AgentOrchestrationPanel';
 import { SolutionOrbPanel } from '@/components/SolutionOrbPanel';
 import { ResultsPanel } from '@/components/ResultsPanel';
 import { DisclaimerBanner } from '@/components/DisclaimerBanner';
+import { PhoneIntakePanel } from '@/components/PhoneIntakePanel';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useAgentOrchestration } from '@/hooks/useAgentOrchestration';
 import { AppState } from '@/types/care-guide';
@@ -43,7 +44,6 @@ const Index = () => {
     ? 'complete'
     : 'idle';
 
-  // When user stops speaking and there's a transcript, trigger pipeline
   useEffect(() => {
     if (!isListening && transcript.trim() && !hasTriggered.current && !isProcessing) {
       hasTriggered.current = true;
@@ -64,7 +64,6 @@ const Index = () => {
 
   return (
     <div className="flex flex-col h-screen bg-transparent overflow-hidden text-foreground">
-      {/* Header */}
       <header className="flex items-center justify-between px-6 py-3 border-b border-white/20 dark:border-white/10 glass flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -93,7 +92,6 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main 4-panel layout */}
       <main className="flex flex-1 overflow-hidden">
         <motion.section
           className="w-[220px] flex-shrink-0 relative z-10"
@@ -112,6 +110,7 @@ const Index = () => {
             onSubmitText={handleSubmitText}
             isSupported={isSupported}
           />
+          <PhoneIntakePanel onTranscriptReady={(t) => runPipeline(t)} />
         </motion.section>
 
         <motion.section

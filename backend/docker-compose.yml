@@ -1,0 +1,63 @@
+version: "3.9"
+
+services:
+  # ── Aerospike Community Edition ─────────────────────────────────────────────
+  aerospike:
+    image: aerospike/aerospike-server-community:7.1.0.2
+    container_name: care-compass-aerospike
+    ports:
+      - "3000:3000"   # service port
+      - "3001:3001"   # fabric
+      - "3002:3002"   # info
+    volumes:
+      - aerospike-data:/opt/aerospike/data
+    environment:
+      NAMESPACE: care_compass
+    healthcheck:
+      test: ["CMD", "asinfo", "-v", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI Backend ──────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: care-compass-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      AEROSPIKE_HOST: aerospike
+      AEROSPIKE_PORT: "3000"
+      AEROSPIKE_NAMESPACE: care_compass
+      DEBUG: "true"
+    depends_on:
+      aerospike:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app        # hot-reload for local dev
+      - ./data:/app/data
+
+  # ── Seed job (runs once then exits) ─────────────────────────────────────────
+  seeder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: care-compass-seeder
+    env_file:
+      - .env
+    environment:
+      AEROSPIKE_HOST: aerospike
+      AEROSPIKE_PORT: "3000"
+      AEROSPIKE_NAMESPACE: care_compass
+    depends_on:
+      aerospike:
+        condition: service_healthy
+    command: ["python", "scripts/seed_aerospike.py", "--verify"]
+    restart: "no"
+
+volumes:
+  aerospike-data:
