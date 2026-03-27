@@ -1,0 +1,4 @@
+project_id = "zuuahqjytkuoqeqcpekd"
+
+[functions.care-guide]
+verify_jwt = false
