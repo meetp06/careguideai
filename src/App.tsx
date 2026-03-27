@@ -7,7 +7,15 @@ import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SketchLeafBackground from "./components/SketchLeafBackground";
-import { Auth0Provider } from "@auth0/auth0-react";
+import { Auth0Provider, withAuthenticationRequired } from "@auth0/auth0-react";
+
+const ProtectedIndex = withAuthenticationRequired(Index, {
+  onRedirecting: () => (
+    <div className="flex h-screen items-center justify-center bg-background text-foreground">
+      Redirecting to secure login...
+    </div>
+  ),
+});
 
 const queryClient = new QueryClient();
 
@@ -28,7 +36,7 @@ const App = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/app" element={<Index />} />
+          <Route path="/app" element={<ProtectedIndex />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -5,6 +5,7 @@ import { AgentOrchestrationPanel } from '@/components/AgentOrchestrationPanel';
 import { SolutionOrbPanel } from '@/components/SolutionOrbPanel';
 import { ResultsPanel } from '@/components/ResultsPanel';
 import { DisclaimerBanner } from '@/components/DisclaimerBanner';
+import { PhoneIntakePanel } from '@/components/PhoneIntakePanel';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useAgentOrchestration } from '@/hooks/useAgentOrchestration';
 import { AppState } from '@/types/care-guide';
@@ -122,6 +123,7 @@ const Index = () => {
             onSubmitText={handleSubmitText}
             isSupported={isSupported}
           />
+          <PhoneIntakePanel onTranscriptReady={(t) => runPipeline(t)} />
         </motion.section>
 
         <motion.section

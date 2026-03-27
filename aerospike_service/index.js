@@ -84,6 +84,64 @@ app.get('/session/:id', async (req, res) => {
   }
 });
 
+// ─── Bland AI Phone Intake: call user to collect symptoms ───
+app.post('/api/phone-intake', async (req, res) => {
+  try {
+    const BLAND_API_KEY = process.env.BLAND_API_KEY;
+    if (!BLAND_API_KEY) return res.status(500).json({ error: 'BLAND_API_KEY not configured' });
+
+    const phoneNumber = req.body.phoneNumber || '+12017257992'; // default to user's number
+
+    const response = await fetch('https://api.bland.ai/v1/calls', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': BLAND_API_KEY },
+      body: JSON.stringify({
+        phone_number: phoneNumber,
+        task: `You are a medical intake AI assistant for CareGuide AI. Your job is to ask the patient about their symptoms. Ask: 1) What symptoms are you experiencing? 2) How long have you had them? 3) How severe are they on a scale of 1-10? 4) Any other relevant details? Be warm, professional, and concise. After collecting all information, thank them and say their symptoms will be analyzed by our medical AI agents.`,
+        voice: 'nat',
+        max_duration: 3,
+        record: true,
+        wait_for_greeting: true,
+        first_sentence: 'Hi! This is CareGuide AI. I am going to ask you a few questions about your symptoms so our medical agents can help. What symptoms are you experiencing?'
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json({ error: data.message || 'Call failed' });
+
+    // Store call ID for polling
+    const intakeData = { callId: data.call_id, status: 'in_progress', transcript: null, timestamp: new Date().toISOString() };
+    memoryFallback.set(`intake_${data.call_id}`, intakeData);
+
+    console.log(`📞 Phone intake call dispatched. Call ID: ${data.call_id}`);
+    res.json({ success: true, callId: data.call_id });
+  } catch (err) {
+    console.error('Phone intake error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/phone-intake/:callId', async (req, res) => {
+  try {
+    const BLAND_API_KEY = process.env.BLAND_API_KEY;
+    const { callId } = req.params;
+
+    // Check Bland API for call status and transcript
+    const response = await fetch(`https://api.bland.ai/v1/calls/${callId}`, {
+      headers: { 'Authorization': BLAND_API_KEY }
+    });
+    const data = await response.json();
+
+    if (data.status === 'completed' && data.concatenated_transcript) {
+      res.json({ status: 'completed', transcript: data.concatenated_transcript });
+    } else {
+      res.json({ status: data.status || 'in_progress', transcript: null });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Real Booking: Bland AI dispatches an actual phone call ───
 app.post('/api/book-appointment', async (req, res) => {
   try {
